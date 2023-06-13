@@ -1,8 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urldefrag
+from langchain.document_loaders import DirectoryLoader
+
 
 def extract_unique_absolute_urls(url, visited_links=None, depth_limit=3, current_depth=0):
+# all_unique_absolute_urls = extract_unique_absolute_urls(website_url, depth_limit=depth_limit)
     if visited_links is None:
         visited_links = set()
 
@@ -27,5 +30,10 @@ def extract_unique_absolute_urls(url, visited_links=None, depth_limit=3, current
 
     return visited_links
 
-
-# all_unique_absolute_urls = extract_unique_absolute_urls(website_url, depth_limit=depth_limit)
+def load_documents(folder_path)
+    loader = DirectoryLoader(folder_path, glob="**/*.html")
+    print("=" * 100)
+    print('Loading docs...')
+    docs = loader.load()
+    print(f"Loaded {len(docs)} documents.")
+    return docs
