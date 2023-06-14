@@ -8,6 +8,7 @@ nest_asyncio.apply()
 import os
 import asyncio
 import aiohttp
+import tiktoken
 
 def extract_unique_absolute_urls(url, visited_links=None, depth_limit=3, current_depth=0):
 # all_unique_absolute_urls = extract_unique_absolute_urls(website_url, depth_limit=depth_limit)
@@ -71,7 +72,6 @@ async def download_html_pages(url_list, folder):
 # loop = asyncio.get_event_loop()
 # loop.run_until_complete(download_html_pages(all_unique_absolute_urls, folder_path))
 
-
 def load_documents(folder_path):
     loader = DirectoryLoader(folder_path, glob="**/*.html")
     print("=" * 100)
@@ -79,3 +79,10 @@ def load_documents(folder_path):
     docs = loader.load()
     print(f"Loaded {len(docs)} documents.")
     return docs
+
+
+# TODO: Add this to get length of tokens which will be used
+
+# tokenizer = tiktoken.get_encoding('cl100k_base')
+# def tiktoken_length(text):
+#     return len(tokenizer.encode(text))
