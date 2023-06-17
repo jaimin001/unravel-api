@@ -1,6 +1,6 @@
 import os
 import streamlit as st
-from utils import create_database_for_link, load_documents
+from utils import create_database_for_link, load_documents, split_documents
 from dotenv import load_dotenv
 import asyncio
 import nest_asyncio
@@ -46,12 +46,16 @@ def main():
                     
                     max_attempts = int(os.getenv('MAX_ATTEMPTS', 5)) 
                     succ_diff = create_database_for_link(link, path, max_attempts=max_attempts)
-                    if succ_diff:
+                    
+                    docs = load_documents(path + "/files")
+                    texts = split_documents(docs)
+                    
+                    if succ_diff or texts == False:
                         st.success(f'API {i+1} is Understood!')
                     else:
                         st.error(f'Some error occured while understanding API {i+1}!')
                     
-                    docs = load_documents(path + "/files")
+                    
                     
                 st.success('All the API(s) are Understood!')
 

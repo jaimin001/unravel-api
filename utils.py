@@ -8,6 +8,12 @@ import asyncio
 import aiohttp
 import tiktoken
 import time
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+
+def tiktoken_length(text):
+    tokenizer = tiktoken.get_encoding('cl100k_base')
+    return len(tokenizer.encode(text))
 
 def extract_unique_absolute_urls(url, visited_links=None, depth_limit=3, current_depth=0):
     if visited_links is None:
@@ -84,13 +90,6 @@ def load_documents(folder_path):
     return docs
 
 
-# TODO: Add this to get length of tokens which will be used
-
-# tokenizer = tiktoken.get_encoding('cl100k_base')
-# def tiktoken_length(text):
-#     return len(tokenizer.encode(text))
-
-
 def create_database_for_link(api_doc_url, path, max_attempts=3):
     
     success = False
@@ -121,3 +120,18 @@ def create_database_for_link(api_doc_url, path, max_attempts=3):
             else:
                 print("Retrying...")
     return success
+
+
+def split_documents(docs):
+    try:
+        text_splitter = RecursiveCharacterTextSplitter(
+            # Set a really small chunk size, just to show.
+            chunk_size = 1000,
+            chunk_overlap  = 50,
+            length_function = len,
+            separators=["\n\n", "\n", " ", ""],
+        )
+        texts = text_splitter.split_documents(docs)
+        return texts
+    except:
+        return False
