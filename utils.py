@@ -9,6 +9,8 @@ import aiohttp
 import tiktoken
 import time
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+import codecs
+from langchain.document_loaders import TextLoader
 
 
 def tiktoken_length(text):
@@ -54,7 +56,7 @@ async def download_html_page(session, url, folder):
             html_content_bytes = await response.content.read()
 
             # Extract the file name from the URL
-            filename = url.split("/")[-1] + ".html"
+            filename = url.split("/")[-1]
 
             # Create the folder if it doesn't exist
             os.makedirs(folder, exist_ok=True)
@@ -62,14 +64,20 @@ async def download_html_page(session, url, folder):
             # Save the HTML content to a file in the specified folder
             filepath = os.path.join(folder, filename)
             try:
-                with open(filepath, "w", encoding="utf-8-sig") as file:
+                with open(filepath, "wb") as file:
                     file.write(html_content_bytes)
-            except:
-                pass
+            except Exception as e:
+                print(f"Error saving file: {str(e)}")
+            else:
+                print(f"Successfully downloaded HTML from {url} and saved as {filepath}")
 
-            print(f"Successfully downloaded HTML from {url} and saved as {filepath}")
     except aiohttp.ClientError as e:
         print(f"Error downloading HTML from {url}: {str(e)}")
+
+def read_txt_file(filename, encoding):
+    with codecs.open(filename, "r", encoding=encoding, errors="replace") as file:
+        file_text = file.read()
+    return encoding, file_text
 
 
 async def download_html_pages(url_list, folder):
@@ -82,7 +90,7 @@ async def download_html_pages(url_list, folder):
         await asyncio.gather(*tasks)
 
 def load_documents(folder_path):
-    loader = DirectoryLoader(folder_path, glob="**/*.html")
+    loader = DirectoryLoader(folder_path, glob="**/*.html", show_progress=True, loader_cls=TextLoader, loader_kwargs={'autodetect_encoding': True})
     print("=" * 100)
     print('Loading docs...')
     docs = loader.load()

@@ -4,15 +4,18 @@ from utils import create_database_for_link, load_documents, split_documents
 from dotenv import load_dotenv
 import asyncio
 import nest_asyncio
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.vectorstores import DeepLake
+import openai
 
 
 def main():
     asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
-    # nest_asyncio.apply()
     load_dotenv()
     # Set the OpenAI API key
-    os.environ['OPENAI_API_KEY'] = os.getenv('OPENAI_API_KEY')
-
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+    os.environ['ACTIVELOOP_TOKEN'] = os.getenv('ACTIVELOOP_TOKEN')
+    
     # Page layout and title
     st.set_page_config(page_title='UnRavel APIs', layout='wide')
     st.title('UnRavel APIs')
@@ -49,6 +52,11 @@ def main():
                     
                     docs = load_documents(path + "/files")
                     texts = split_documents(docs)
+                    
+                    dataset_path = os.getenv('DATASET_PATH')
+                    db = DeepLake.from_documents(docs, dataset_path=dataset_path, embedding=OpenAIEmbeddings())
+                    db.add_documents(texts)
+                    print('Vector database updated.')
                     
                     if succ_diff or texts == False:
                         st.success(f'API {i+1} is Understood!')
