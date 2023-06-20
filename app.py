@@ -54,7 +54,7 @@ def main():
                     texts = split_documents(docs)
                     
                     dataset_path = os.getenv('DATASET_PATH')
-                    db = DeepLake.from_documents(docs, dataset_path=dataset_path, embedding=OpenAIEmbeddings())
+                    db = DeepLake(dataset_path="./my_deeplake/", embedding_function=OpenAIEmbeddings(), overwrite=True)
                     db.add_documents(texts)
                     print('Vector database updated.')
                     
@@ -62,7 +62,6 @@ def main():
                         st.success(f'API {i+1} is Understood!')
                     else:
                         st.error(f'Some error occured while understanding API {i+1}!')
-                    
                     
                     
                 st.success('All the API(s) are Understood!')

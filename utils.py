@@ -90,7 +90,7 @@ async def download_html_pages(url_list, folder):
         await asyncio.gather(*tasks)
 
 def load_documents(folder_path):
-    loader = DirectoryLoader(folder_path, glob="**/*.html", show_progress=True, loader_cls=TextLoader, loader_kwargs={'autodetect_encoding': True})
+    loader = DirectoryLoader(folder_path, glob="**/*.html", show_progress=True, loader_cls=TextLoader, loader_kwargs={'autodetect_encoding': True}, silent_errors=True)
     print("=" * 100)
     print('Loading docs...')
     docs = loader.load()
