@@ -1,4 +1,5 @@
 import requests
+import streamlit as st
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urldefrag
 from langchain.document_loaders import DirectoryLoader
@@ -143,3 +144,13 @@ def split_documents(docs):
         return texts
     except:
         return False
+    
+def get_user_input():
+    user_query = st.text_input('Enter your query...')
+    if user_query.lower() == 'quit':
+        return None
+    return user_query
+
+def print_answer(question, answer):
+    st.write(f"Question: {question}")
+    st.write(f"Response: \n {answer}")

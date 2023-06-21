@@ -1,20 +1,24 @@
 import os
+import openai
 import streamlit as st
-from utils import create_database_for_link, load_documents, split_documents
+from utils import create_database_for_link, load_documents, split_documents, get_user_input, print_answer
 from dotenv import load_dotenv
 import asyncio
-import nest_asyncio
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import DeepLake
-import openai
+from langchain.chat_models import ChatOpenAI
+from langchain.chains import ConversationalRetrievalChain
+from langchain.callbacks import get_openai_callback
+import deeplake
 
 
 def main():
     asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
     load_dotenv()
     # Set the OpenAI API key
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+    os.environ['OPENAI_API_KEY'] = os.getenv('OPENAI_API_KEY')
     os.environ['ACTIVELOOP_TOKEN'] = os.getenv('ACTIVELOOP_TOKEN')
+    language_model = os.getenv('LANGUAGE_MODEL')
     
     # Page layout and title
     st.set_page_config(page_title='UnRavel APIs', layout='wide')
@@ -42,39 +46,62 @@ def main():
                 for i, link in enumerate(api_links_list):
                     st.info(f'Processing {link}')
                     
-                    path = f"data/data_{i}"
-                    if not os.path.exists(path):
-                        os.makedirs(path)
-                        os.makedirs(path + "/files")
+                    # path = f"data/data_{i}"
+                    # if not os.path.exists(path):
+                    #     os.makedirs(path)
+                    #     os.makedirs(path + "/files")
                     
-                    max_attempts = int(os.getenv('MAX_ATTEMPTS', 5)) 
-                    succ_diff = create_database_for_link(link, path, max_attempts=max_attempts)
+                    # max_attempts = int(os.getenv('MAX_ATTEMPTS', 5)) 
+                    # succ_diff = create_database_for_link(link, path, max_attempts=max_attempts)
                     
-                    docs = load_documents(path + "/files")
-                    texts = split_documents(docs)
+                    # docs = load_documents(path + "/files")
+                    # texts = split_documents(docs)
                     
                     dataset_path = os.getenv('DATASET_PATH')
-                    db = DeepLake(dataset_path="./my_deeplake/", embedding_function=OpenAIEmbeddings(), overwrite=True)
-                    db.add_documents(texts)
-                    print('Vector database updated.')
+                    db = DeepLake(dataset_path=dataset_path, embedding_function=OpenAIEmbeddings(), overwrite=True)
+                    # db.add_documents(texts)
+                    # print('Vector database updated.')
                     
-                    if succ_diff or texts == False:
-                        st.success(f'API {i+1} is Understood!')
-                    else:
-                        st.error(f'Some error occured while understanding API {i+1}!')
+                    # if succ_diff or texts == False:
+                    #     st.success(f'API {i+1} is Understood!')
+                    # else:
+                    #     st.error(f'Some error occured while understanding API {i+1}!')
                     
                     
                 st.success('All the API(s) are Understood!')
 
                 # Chat interface
-                if st.button('Start Chatting'):
-                    st.subheader('Chat Interface')
-                    user_query = st.text_input('Enter your query')
+                # if st.button('Start Chatting'):
+                st.subheader('Chat Interface')
+                    # Initialize retriever and set search parameters
+                # db = deeplake.load(dataset_path)
+                retriever = db.as_retriever()
+                retriever.search_kwargs.update({
+                        'distance_metric': 'cos',
+                        'fetch_k': 100,
+                        'maximal_marginal_relevance': True,
+                        'k': 10,
+                })
+                model = ChatOpenAI(model_name=language_model, temperature=0.2) # gpt-3.5-turbo by default. Use gpt-4 for better and more accurate responses 
 
-                    if user_query:
-                        # TODO: Replace with search logic
-                        # TODO: Display search results
-                        pass
+                qa = ConversationalRetrievalChain.from_llm(model, retriever=retriever)
+
+                    # Initialize chat history
+                chat_history = []
+
+
+                while True:
+                    user_query = st.text_input('Enter your query...')
+                    print(user_query)
+                    if user_query.lower() == 'quit':
+                        return None
+
+                    # Display token usage and approximate costs
+                    with get_openai_callback() as tokens_usage:
+                        result = qa({"question": user_query, "chat_history": chat_history})
+                        chat_history.append((user_query, result['answer']))
+                        st.write(f"Question: {user_query}")
+                        st.write(f"Response: \n {result['answer']}")
 
 
     # Footer
