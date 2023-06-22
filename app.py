@@ -46,26 +46,26 @@ def main():
                 for i, link in enumerate(api_links_list):
                     st.info(f'Processing {link}')
                     
-                    # path = f"data/data_{i}"
-                    # if not os.path.exists(path):
-                    #     os.makedirs(path)
-                    #     os.makedirs(path + "/files")
+                    path = f"data/data_{i}"
+                    if not os.path.exists(path):
+                        os.makedirs(path)
+                        os.makedirs(path + "/files")
                     
-                    # max_attempts = int(os.getenv('MAX_ATTEMPTS', 5)) 
-                    # succ_diff = create_database_for_link(link, path, max_attempts=max_attempts)
+                    max_attempts = int(os.getenv('MAX_ATTEMPTS', 5)) 
+                    succ_diff = create_database_for_link(link, path, max_attempts=max_attempts)
                     
-                    # docs = load_documents(path + "/files")
-                    # texts = split_documents(docs)
+                    docs = load_documents(path + "/files")
+                    texts = split_documents(docs)
                     
                     dataset_path = os.getenv('DATASET_PATH')
                     db = DeepLake(dataset_path=dataset_path, embedding_function=OpenAIEmbeddings(), overwrite=True)
-                    # db.add_documents(texts)
-                    # print('Vector database updated.')
+                    db.add_documents(texts)
+                    print('Vector database updated.')
                     
-                    # if succ_diff or texts == False:
-                    #     st.success(f'API {i+1} is Understood!')
-                    # else:
-                    #     st.error(f'Some error occured while understanding API {i+1}!')
+                    if succ_diff or texts == False:
+                        st.success(f'API {i+1} is Understood!')
+                    else:
+                        st.error(f'Some error occured while understanding API {i+1}!')
                     
                     
                 st.success('All the API(s) are Understood!')
